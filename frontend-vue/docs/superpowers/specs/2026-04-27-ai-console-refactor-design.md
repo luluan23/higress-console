@@ -66,7 +66,9 @@ src/
 │   │   ├── consumer/           # 消费者 KEY 管理（管理员）
 │   │   │   ├── index.vue
 │   │   │   └── ConsumerDrawer.vue
-│   │   └── overview/           # 系统概览（管理员）
+│   │   ├── overview/           # 系统概览（管理员）
+│   │   │   └── index.vue
+│   │   └── monitor/            # AI 监控看板，Grafana iframe（管理员）
 │   │       └── index.vue
 ├── components/
 │   ├── charts/
@@ -110,6 +112,7 @@ src/
 │    ⇢ AI 路由                                │
 │    ⚿ 消费者 KEY                             │
 │    ▦ 系统概览                               │
+│    ◈ 监控看板                               │
 │  ─────────────────────────────────────────  │
 │  用户头像 + 名称 + 角色                      │
 └─────────────────────────────────────────────┘
@@ -274,6 +277,31 @@ src/
 2. **双列：** 全系统 Token 堆叠柱状图（近 7 日，按模型） + 消费者 Token 用量排行表（Top 5，含 Rank 色块）
 3. **双列：** 消费者额度使用率进度条列表（颜色阈值：<50% 绿 / 50-80% 蓝 / >80% 琥珀→红）+ AI 路由状态表
 
+### 4.8 AI 监控看板页 (`/ai/monitor`)
+
+**功能：** 嵌入 Grafana 仪表盘，提供实时 AI 网关监控指标（请求量、延迟、错误率等）。仅管理员可见。
+
+**数据来源：** `GET /dashboard/info?type=AI` 返回 `DashboardInfo { builtIn: boolean, uid: string, url: string }`。
+
+**两种状态：**
+
+1. **已配置（`builtIn: true` 或 `url` 非空）：**
+   - 全屏 `<iframe>` 嵌入 `url` 字段指向的 Grafana 页面
+   - iframe 高度撑满内容区（`calc(100vh - 56px)`），无内边距
+   - 右上角提供「在新标签页打开」按钮，直接跳转 `url`
+   - iframe 加载期间显示 TDesign `Loading` 骨架屏占位
+
+2. **未配置（`url` 为空）：**
+   - 显示空状态提示：「Grafana 监控看板尚未初始化」
+   - 提供「初始化看板」按钮，点击调用 `POST /dashboard/init`
+   - 初始化成功后刷新 `GET /dashboard/info` 并切换到嵌入视图
+
+**错误处理：**
+- iframe `onError` 或 `load` 超时（10s）→ 显示错误提示 + 「重试」按钮
+- `GET /dashboard/info` 接口失败 → 显示错误提示
+
+**安全注意：** `url` 字段值直接来自后端 API，前端不拼接或修改，不接受用户输入。
+
 ---
 
 ## 5. 共享组件
@@ -413,6 +441,7 @@ export const getUserInfo = () => request.get('/user/info')
     { path: 'route',      name: 'AiRoute',      component: () => import('@/views/ai/route/index.vue') },
     { path: 'consumer',   name: 'AiConsumer',   component: () => import('@/views/ai/consumer/index.vue') },
     { path: 'overview',   name: 'AiOverview',   component: () => import('@/views/ai/overview/index.vue') },
+    { path: 'monitor',    name: 'AiMonitor',    component: () => import('@/views/ai/monitor/index.vue') },
   ]
 }
 ```
@@ -467,6 +496,7 @@ TDesignResolver({ library: 'tdesign-vue-next' })
 | P1 | AI 路由管理页 (`/ai/route`) | 有真实 API |
 | P2 | 消费者 KEY 管理页 (`/ai/consumer`) | 有真实 API |
 | P2 | 系统概览页 (`/ai/overview`) | 全 Mock，可快速实现 |
+| P2 | AI 监控看板页 (`/ai/monitor`) | 有真实 API，逻辑简单（iframe 嵌入） |
 | P3 | API 端点页 + 用量明细页 | 辅助页面 |
 
 ---
@@ -474,7 +504,6 @@ TDesignResolver({ library: 'tdesign-vue-next' })
 ## 12. 不在本次范围内
 
 - 登录页面（`POST /session/login`）
-- Grafana iframe 嵌入（`GET /dashboard/info?type=AI`）
 - 插件管理、路由管理（非 AI）、证书管理等其他 Console 功能
 - 单元测试
 - 国际化（i18n）
