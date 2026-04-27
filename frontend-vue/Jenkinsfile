@@ -1,0 +1,80 @@
+pipeline {
+    environment {
+        // 改这几个就可以了
+        PROJECT="cmdb_permission_front"
+        DEPLOYMENT_NAME="cmdb_permission_front-deployment"
+        // 改这几个就可以了
+        BUILD_TIME = sh(script:"date '+%Y%m%d%H%M'", returnStdout: true).trim()
+        DOCKERHUB="xsjop-harbor.seasungame.com/bigdata"
+        LABEL="yunyingkaifa"
+        IMAGE_TAG="${DOCKERHUB}/${PROJECT}:${BRANCH_NAME}-${BUILD_TIME}-${BUILD_ID}"
+    }
+    agent any
+
+    stages {
+         stage("init"){
+                agent {
+                   docker {
+                       image "node:14.17.0"
+                       label "${LABEL}"
+                    }
+               }
+               steps{
+                   script{
+                       // k8s命名空间
+                       namespaceMap = [
+                            "dev":"bigdata-qa",
+                            "master":"bigdata-prod"
+                       ]
+                       contextMap = [
+                            "dev":"/root/.kube/bigdata-qa.kubeconfig",
+                            "master":"/root/.kube/bigdata-prod.kubeconfig",
+                       ]
+                       contextMap2 = [
+                          "dev":"https://internet-xsjsso.seasungame.com/api-xsjsso",
+                          "master":"https://internet-xsjsso.seasungame.com/api-xsjsso",
+                       ]
+                       serverUrlMap = [
+                            "dev":"https://tech-dev.seasungame.com", // 这里要根据项目的名称和域名修改
+                            "master":"https://tech.seasungame.com",
+                       ]
+                       env.NAMESPACE=namespaceMap.get(env.BRANCH_NAME)
+                       env.K8SCONFIG=contextMap.get(env.BRANCH_NAME)
+                       env.K8SCONFIG2=contextMap2.get(env.BRANCH_NAME)
+                       env.SERVERURL=serverUrlMap.get(env.BRANCH_NAME)
+                    }
+                    sh "sed -i -e  '/isDevelopMode/d' -e '/影响请求权限校验机制/a isDevelopMode:false,' ./src/settings.js"
+                    sh "sed -i -e  '/ssoServerUrl/d' -e '/SSO服务地址/a ssoServerUrl:\"${SERVERURL}\",' ./src/settings.js"
+                     sh "sed -i -e  '/mainServerUrl/d' -e '/main服务地址/a mainServerUrl:\"${MAINSERVERURL}\",' ./src/settings.js"
+                    sh "npm install --registry=http://registry.npm.taobao.org/ && npm run build"
+               }
+             }
+         stage('build'){
+            agent {
+                docker {
+                    image "docker:19.03.12"
+                    label "${LABEL}"
+                    args "-v /var/run/docker.sock:/var/run/docker.sock -v /root/.docker:/root/.docker"
+                }
+             }
+            steps{
+                sh "docker build -t ${IMAGE_TAG} -f Dockerfile ."
+                sh "docker push ${IMAGE_TAG}"
+            }
+        }
+        stage('deploy'){
+            agent{
+                docker{
+                    image "roffe/kubectl:v1.13.2"
+                    label "${LABEL}"
+                    args "-v /root/.kube:/root/.kube"
+                }
+            }
+            steps{
+                sh "kubectl --kubeconfig ${K8SCONFIG} -n ${NAMESPACE} set image deployment/${DEPLOYMENT_NAME} ${PROJECT}=${IMAGE_TAG}"
+                sh "kubectl --kubeconfig ${K8SCONFIG2} -n ${NAMESPACE} set image deployment/${DEPLOYMENT_NAME} ${PROJECT}=${IMAGE_TAG}"
+            }
+        }
+    }
+}
+

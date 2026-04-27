@@ -1,0 +1,41 @@
+@charset "UTF-8";
+/**
+ * 样式变量统一定义在这里
+ */
+
+//////////// 颜色变量 ////////////////
+$mainColor1 : #24313F;
+$mainColor2 : #374357;
+$mainColor3 : #E8EBF2;
+$mainColor4 : #cde6ff;
+$fontColor1 : #409EFF;
+$fontColor2 : #454657;
+
+
+
+$menuText: $fontColor2;
+$menuActiveText:$fontColor1;
+$subMenuActiveText:$fontColor2; // https://github.com/ElemeFE/element/issues/12951
+
+$menuBg:$mainColor3;
+$menuHover:$mainColor3;
+
+$subMenuBg:$mainColor3;
+$subMenuHover:$mainColor4;
+
+$sideBarWidth: 210px;
+$base-color-blue:$fontColor1;
+$base-color-gray:#bfcbd9;
+
+
+export default {
+  menuText: $menuText;
+  menuActiveText: $menuActiveText;
+  subMenuActiveText: $subMenuActiveText;
+  menuBg: $menuBg;
+  menuHover: $menuHover;
+  subMenuBg: $subMenuBg;
+  subMenuHover: $subMenuHover;
+  sideBarWidth: $sideBarWidth;
+}
+

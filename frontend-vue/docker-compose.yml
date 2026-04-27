@@ -1,0 +1,15 @@
+
+services:
+  ommsweb:
+    image: xsjop-harbor.seasungame.com/omms-dev/ommsweb:latest
+    ports:
+      - 8000:8000
+
+  cmdb:
+    image: xsjop-harbor.seasungame.com/omms-dev/cmdb:latest
+
+  newcmdb:
+    image: xsjop-harbor.seasungame.com/omms-dev/newcmdb:latest
+
+  cmdb_permission:
+    image: xsjop-harbor.seasungame.com/omms-dev/cmdb_permission:latest
