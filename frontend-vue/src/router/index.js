@@ -2,14 +2,17 @@ import { createRouter, createWebHashHistory } from "vue-router";
 // 这个是布局组件，如果我们项目不需要使用内置布局则可以删除掉
 import Layout from "./../layout/layoutIndex.vue";
 import errorPages from "./modules/errorPages";
+import aiRoutes from "./modules/aiRoutes";
 
 export const constantRoutes = [
   {
     path: "/",
+    redirect: "/ai/dashboard",
+  },
+  {
+    path: "/main",
     name: "mainpage",
-    // redirect: { name: "appList" },
     component: Layout,
-    // hidden: true,
     children: [
       {
         path: "mainpageindex",
@@ -18,63 +21,7 @@ export const constantRoutes = [
       },
     ],
   },
-  // {
-  //   path: "/home",
-  //   component: Layout,
-  //   children: [
-  //     {
-  //       path: "introduce",
-  //       component: () => import("../views/home/home.vue"),
-  //       name: "Introduce",
-  //       meta: { title: "介绍页", icon: "tcicon-home" },
-  //     },
-  //   ],
-  // },
-  // permissionRoute,
-  // {
-  //   path: "/demo",
-  //   component: Layout,
-  //   meta: {
-  //     title: "功能示例",
-  //     icon: "tcicon-baby-app",
-  //   },
-  //   alwaysShow: true,
-  //   children: [
-  //       {
-  //         path: "tech",
-  //         component: () => import("../views/demo/techView.vue"),
-  //         name: "tech",
-  //         meta: {
-  //           title: "获取用户信息",
-  //           icon: "tcicon-people",
-  //           // sysCode: "Tech",
-  //           // resCode: "TechWorkbench",
-  //         },
-  //       },
-  //       {
-  //         path: "bus",
-  //         component: () => import("../views/demo/busView.vue"),
-  //         name: "bus",
-  //         meta: {
-  //           title: "事件总线使用",
-  //           icon: "tcicon-speaker-one",
-  //           // sysCode: "TCvue",
-  //           // resCode: "resCode1",
-  //         },
-  //       },
-  //       {
-  //         path: "auth",
-  //         component: () => import("../views/demo/authView.vue"),
-  //         name: "auth",
-  //         meta: {
-  //           title: "权限控制示例",
-  //           icon: "tcicon-permissions",
-  //           // sysCode: "TCvue",
-  //           // resCode: "resCode1",
-  //         },
-  //       },
-  //   ],
-  // },
+  aiRoutes,
   errorPages,
 ];
 

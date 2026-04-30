@@ -1,0 +1,51 @@
+/* AI Console — CSS Variable Theme System */
+
+:root[data-theme="light"] {
+  --bg-0: #f5f6fa;
+  --bg-1: #ffffff;
+  --bg-2: #eef0f6;
+  --bg-border: #dde1ea;
+
+  --text-primary: #1a1f2e;
+  --text-secondary: #4a5568;
+  --text-muted: #8896a9;
+
+  --color-blue: #0052d9;
+  --color-green: #00a870;
+  --color-amber: #ed7b2f;
+  --color-red: #e34d59;
+  --color-purple: #7b4fb3;
+
+  --sidebar-bg: #ffffff;
+  --sidebar-active-bg: #edf3fe;
+  --sidebar-active-text: #0052d9;
+  --topbar-bg: #ffffff;
+  --card-bg: #ffffff;
+  --chart-text: #4a5568;
+  --chart-axis: #dde1ea;
+}
+
+:root[data-theme="dark"] {
+  --bg-0: #13151f;
+  --bg-1: #1c1f2e;
+  --bg-2: #252836;
+  --bg-border: #343750;
+
+  --text-primary: #e8eaf0;
+  --text-secondary: #9aa1b9;
+  --text-muted: #5a6070;
+
+  --color-blue: #4987f5;
+  --color-green: #0fc78c;
+  --color-amber: #f5a623;
+  --color-red: #f56c6c;
+  --color-purple: #a78bdb;
+
+  --sidebar-bg: #1c1f2e;
+  --sidebar-active-bg: #252d45;
+  --sidebar-active-text: #4987f5;
+  --topbar-bg: #1c1f2e;
+  --card-bg: #1c1f2e;
+  --chart-text: #9aa1b9;
+  --chart-axis: #343750;
+}

@@ -4,8 +4,8 @@ import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
-import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
-const name = 'goppermission-ui';
+import { ElementPlusResolver, TDesignResolver } from 'unplugin-vue-components/resolvers'
+const name = 'llm-platform';
 // https://vitejs.dev/config/
 export default defineConfig({
   base: name,
@@ -13,10 +13,10 @@ export default defineConfig({
     vue(),
     vueJsx(),
     AutoImport({
-      resolvers: [ElementPlusResolver()],
+      resolvers: [ElementPlusResolver(), TDesignResolver({ library: 'vue-next' })],
     }),
     Components({
-      resolvers: [ElementPlusResolver()],
+      resolvers: [ElementPlusResolver(), TDesignResolver({ library: 'vue-next' })],
     })
   ],
   resolve: {
@@ -36,11 +36,17 @@ export default defineConfig({
     }
   },
   server: {
-    port: 9008,
+    port: 9009,
     headers: {
       "Access-Control-Allow-Origin": "*",
     },
     proxy: {
+      '/v1': {
+        target: "http://localhost:18001/",  //目标代理接口地址
+        secure: false,
+        changeOrigin: true,  //开启代理，在本地创建一个虚拟服务器
+        ws: true
+      },
       '/tech': {
         // target: "https://tech.seasungame.com/",  //目标代理接口地址
         target: "https://gop.seasungame.com/",

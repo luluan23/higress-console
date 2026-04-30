@@ -8,6 +8,21 @@
   </div>
 </template>
 
+<script>
+import { useThemeStore } from '@/stores/modules/themeStore'
+import { useAppStore } from '@/stores/modules/appStore'
+
+export default {
+  name: 'App',
+  created() {
+    const themeStore = useThemeStore()
+    themeStore.initTheme()
+    const appStore = useAppStore()
+    appStore.resolveUserRole()
+  },
+}
+</script>
+
 <style lang="scss">
   *::-webkit-scrollbar {
     width: 6px;
