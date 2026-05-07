@@ -2,6 +2,7 @@ import { createRouter, createWebHashHistory } from "vue-router";
 // 这个是布局组件，如果我们项目不需要使用内置布局则可以删除掉
 import Layout from "./../layout/layoutIndex.vue";
 import errorPages from "./modules/errorPages";
+import aiRoutes from "./modules/aiRoutes";
 
 export const constantRoutes = [
   {
@@ -18,6 +19,7 @@ export const constantRoutes = [
       },
     ],
   },
+  aiRoutes,
   // {
   //   path: "/home",
   //   component: Layout,

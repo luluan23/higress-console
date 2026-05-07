@@ -1,7 +1,20 @@
 <template>
-    <div  :class="{ 'has-logo': true,'mcromenuwarp':true }">
+  <div  :class="{ 'has-logo': true,'mcromenuwarp':true, 'ai-sidebar-shell': isAiConsoleLayout }">
         <logo :collapse="isCollapse" />
-        <el-scrollbar >
+    <template v-if="isAiConsoleLayout">
+      <nav class="ai-sidebar-nav">
+        <div class="ai-sidebar-group-title">AI 管理</div>
+        <router-link
+          v-for="item in aiMenuItems"
+          :key="item.path"
+          :to="item.path"
+          :class="['ai-sidebar-link', { 'is-active': activeMenu.startsWith(item.path) }]"
+        >
+          {{ item.title }}
+        </router-link>
+      </nav>
+    </template>
+    <el-scrollbar v-else>
             <el-menu
                     :default-active="activeMenu"
                     :collapse="isCollapse"
@@ -26,8 +39,10 @@
   import { useAppStore } from '@/stores'
   import Logo from "./logo.vue" ;
   import SidebarItem from "./sidebarItem.vue";
+  import { AI_MENU_ITEMS, isAiConsoleRoute } from './../../aiNavigation'
 
   export default {
+    name: 'AppSidebar',
     data() {
       return {
         openmenu: [],
@@ -36,6 +51,12 @@
     components: { SidebarItem, Logo },
     computed: {
       ...mapState(useAppStore, ['sidebar', 'permissionRoutes','openMenuIndex']),
+      aiMenuItems() {
+        return AI_MENU_ITEMS;
+      },
+      isAiConsoleLayout() {
+        return isAiConsoleRoute(this.$route);
+      },
       activeMenu() {
         const route = this.$route;
         const { meta, path } = route;
@@ -53,12 +74,6 @@
       openMenuIndex() {
         this.openmenu = [];
         this.openmenu.push(...this.openMenuIndex);
-      },
-      permission_routes: {
-        handler: function (newdata, olddata) {
-          
-        },
-        immediate: true,
       },
     },
     methods: {
@@ -116,5 +131,32 @@
         left: 0;
         height: 38px;
         width: 16px;
+    }
+
+    .ai-sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 24px 16px;
+    }
+
+    .ai-sidebar-group-title {
+      color: #94a3b8;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .ai-sidebar-link {
+      border-radius: 8px;
+      color: #e2e8f0;
+      padding: 12px 14px;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .ai-sidebar-link.is-active {
+      background: #1e40af;
+      color: #ffffff;
     }
 </style>

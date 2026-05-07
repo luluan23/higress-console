@@ -2,12 +2,12 @@
     <div>
         <div v-if="'vertical' === layoutMode">
             <!--左右布局-->
-            <div :class="classObj" class="app-wrapper">
+      <div :class="['app-wrapper', classObj, { 'ai-console-layout': isAiConsoleLayout }]">
                 <Sidebar class="sidebar-container" />
-                <div class="main-container">
-                    <div>
+        <div :class="['main-container', { 'ai-console-main': isAiConsoleLayout }]">
+          <div>
                         <!-- 根据环境变量决定是否显示导航栏 -->
-                        <nav-bar v-if="showNavBar" />
+            <nav-bar v-if="showNavBar && !isAiConsoleLayout" />
                     </div>
                     <app-main />
                 </div>
@@ -17,26 +17,27 @@
             <div  class="app-wrapper">
                 <div>
                     <!-- 根据环境变量决定是否显示导航栏 -->
-                    <nav-bar v-if="showNavBar" />
+          <nav-bar v-if="showNavBar && !isAiConsoleLayout" />
                 </div>
                 <app-main />
             </div>
         </div>
         <div v-else>
             <!-- 根据环境变量决定是否显示导航栏 -->
-            <nav-bar v-if="showNavBar" />
+      <nav-bar v-if="showNavBar && !isAiConsoleLayout" />
             <app-main />
         </div>
     </div>
 </template>
 <script>
   import { mapState, mapActions } from 'pinia'
-  import { useAppStore, useTechStore, useDataStore } from '@/stores'
+  import { useAppStore, useTechStore } from '@/stores'
   import settings from "./../settings";
   import { NavBar, AppMain, Sidebar } from "./components";
   import { useRouter } from 'vue-router'
+  import { isAiConsoleRoute } from './aiNavigation'
   export default {
-    name: "Layout",
+    name: "AppLayout",
     data() {
       return {
         layoutMode: "",
@@ -58,6 +59,9 @@
           openSidebar: this.sidebar.opened,
           withoutAnimation: this.sidebar.withoutAnimation
         };
+      },
+      isAiConsoleLayout() {
+        return isAiConsoleRoute(this.$route);
       },
     },
     methods: {

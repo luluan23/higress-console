@@ -8,7 +8,7 @@ import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 const name = 'goppermission-ui';
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: name,
+  base: `/${name}`,
   plugins: [
     vue(),
     vueJsx(),
@@ -58,6 +58,14 @@ export default defineConfig({
       '/api': {
         // target: "http://localhost:8010/",  //目标代理接口地址
         target: "https://gop.seasungame.com/",
+        secure: false,
+        changeOrigin: true,  //开启代理，在本地创建一个虚拟服务器
+        ws: true
+      },
+      '/v1': {
+        //目标代理接口地址
+        target: "http://localhost:18001/",
+        // target: "https://gop.seasungame.com/",
         secure: false,
         changeOrigin: true,  //开启代理，在本地创建一个虚拟服务器
         ws: true
