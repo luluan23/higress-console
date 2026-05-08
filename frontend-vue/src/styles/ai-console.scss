@@ -352,27 +352,27 @@
 }
 
 @media (max-width: 900px) {
-  .ai-console-page {
+  .ai-console-page--statistics {
     padding: 20px 16px 24px;
   }
 
-  .ai-page-toolbar,
-  .ai-statistics-panel__header {
+  .ai-console-page--statistics .ai-page-toolbar,
+  .ai-console-page--statistics .ai-statistics-panel__header {
     flex-direction: column;
   }
 
-  .ai-page-toolbar__actions {
+  .ai-console-page--statistics .ai-page-toolbar__actions {
     width: 100%;
     justify-content: flex-start;
   }
 
-  .ai-statistics-filter-bar,
-  .ai-statistics-kpi-row,
-  .ai-statistics-grid--three {
+  .ai-console-page--statistics .ai-statistics-filter-bar,
+  .ai-console-page--statistics .ai-statistics-kpi-row,
+  .ai-console-page--statistics .ai-statistics-grid--three {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .ai-statistics-chart {
+  .ai-console-page--statistics .ai-statistics-chart {
     min-height: 280px;
   }
 }

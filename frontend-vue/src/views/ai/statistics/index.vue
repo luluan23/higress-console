@@ -9,7 +9,7 @@
     <StatisticsFilterBar
       :filters="filters"
       :options="options"
-      @update:filters="patchFilters"
+      @update:filters="handleFilterUpdate"
       @refresh="refresh"
       @reset="resetFilters"
     />
@@ -152,6 +152,14 @@ const detailRows = computed(() => {
 function handleDrilldown(type, value) {
   detailView.value = type
   applyDrilldown(type, value)
+
+  return refresh()
+}
+
+function handleFilterUpdate(nextFilters) {
+  patchFilters(nextFilters)
+
+  return refresh()
 }
 
 function onDetailViewChange(nextView) {
