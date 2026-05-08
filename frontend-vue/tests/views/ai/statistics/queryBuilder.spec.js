@@ -3,6 +3,7 @@ import {
   buildAverageQuery,
   buildGroupedIncreaseQuery,
   buildPrometheusSelector,
+  buildTrendQuery,
   createDefaultFilters,
 } from '@/views/ai/statistics/queryBuilder'
 import { METRICS } from '@/views/ai/statistics/metricCatalog'
@@ -12,11 +13,11 @@ describe('statistics query builder', () => {
     const selector = buildPrometheusSelector({
       consumers: ['KEY_USER_1', 'KEY_USER_2'],
       models: ['deepseek-v4-flash'],
-      routes: ['route-ai'],
+      routes: ['ai-route-ksyun.internal'],
     })
 
     expect(selector).toBe(
-      '{ai_consumer=~"KEY_USER_1|KEY_USER_2",ai_model=~"deepseek-v4-flash",ai_route=~"route-ai"}'
+      '{ai_consumer=~"KEY_USER_1|KEY_USER_2",ai_model=~"deepseek-v4-flash",ai_route=~"ai-route-ksyun\\.internal"}'
     )
   })
 
@@ -50,5 +51,22 @@ describe('statistics query builder', () => {
     ).toBe(
       'sum(increase(route_upstream_model_consumer_metric_llm_first_token_duration{}[$__range])) / clamp_min(sum(increase(route_upstream_model_consumer_metric_llm_duration_count{}[$__range])), 1)'
     )
+  })
+
+  it('creates time series queries for usage trends', () => {
+    expect(
+      buildTrendQuery({
+        refId: 'D',
+        metric: METRICS.totalToken,
+        filters: createDefaultFilters(),
+        rangeToken: '$__range',
+      })
+    ).toEqual({
+      refId: 'D',
+      expr: 'sum(increase(route_upstream_model_consumer_metric_total_token{}[$__range]))',
+      format: 'time_series',
+      instant: false,
+      range: true,
+    })
   })
 })

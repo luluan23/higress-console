@@ -1,11 +1,15 @@
 import { DEFAULT_FILTERS } from './metricCatalog'
 
+function escapeMatcherValue(value) {
+  return value.replace(/[\\.^$|?*+()[\]{}]/g, '\\$&')
+}
+
 function buildMatcher(key, values) {
   if (!values?.length) {
     return ''
   }
 
-  return `${key}=~"${values.join('|')}"`
+  return `${key}=~"${values.map(escapeMatcherValue).join('|')}"`
 }
 
 export function createDefaultFilters() {
