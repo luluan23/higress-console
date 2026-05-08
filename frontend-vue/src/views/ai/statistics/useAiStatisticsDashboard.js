@@ -35,19 +35,73 @@ export function useAiStatisticsDashboard() {
   const lastUpdatedAt = ref('')
   let activeRequest = 0
 
-  async function resolveDatasource() {
+  function isActiveRequest(requestId) {
+    return requestId === activeRequest
+  }
+
+  function shouldRefreshOptions() {
+    return (
+      !filters.consumers.length &&
+      !filters.models.length &&
+      !filters.routes.length
+    )
+  }
+
+  function getResultRows(result, dimensionField) {
+    if (result.status !== 'fulfilled') {
+      return []
+    }
+
+    return normalizeTableRows(result.value, dimensionField)
+  }
+
+  function getTrendRows(result) {
+    if (result.status !== 'fulfilled') {
+      return []
+    }
+
+    return normalizeTrendSeries(result.value)
+  }
+
+  function hasFrameValues(payload) {
+    return Boolean(
+      payload?.results?.A?.frames?.some((frame) =>
+        (frame?.data?.values || []).some((fieldValues) => fieldValues?.length)
+      )
+    )
+  }
+
+  function getFirstErrorMessage(results) {
+    const rejection = results.find((result) => result.status === 'rejected')
+    const reason = rejection?.reason
+
+    return reason?.msg || reason?.message || '加载统计数据失败'
+  }
+
+  async function resolveDatasource(requestId) {
     const dashboardInfoResponse = await getAiDashboardInfo()
+    if (!isActiveRequest(requestId)) {
+      return null
+    }
+
     const dashboardInfo = dashboardInfoResponse?.data || {}
 
     dashboardUrl.value = dashboardInfo.url || ''
 
     if (!dashboardInfo.uid) {
       datasourceUid.value = ''
-      return
+      return ''
     }
 
     const dashboardResponse = await getGrafanaDashboard(dashboardInfo.uid)
-    datasourceUid.value = parsePrometheusDatasourceUid(dashboardResponse)
+    if (!isActiveRequest(requestId)) {
+      return null
+    }
+
+    const nextDatasourceUid = parsePrometheusDatasourceUid(dashboardResponse)
+    datasourceUid.value = nextDatasourceUid
+
+    return nextDatasourceUid
   }
 
   async function loadDashboard() {
@@ -56,18 +110,21 @@ export function useAiStatisticsDashboard() {
     errorMessage.value = ''
 
     try {
-      if (!datasourceUid.value) {
-        await resolveDatasource()
+      const nextDatasourceUid = datasourceUid.value || (await resolveDatasource(requestId))
+
+      if (!isActiveRequest(requestId)) {
+        return
       }
 
-      if (!datasourceUid.value) {
+      if (!nextDatasourceUid) {
         state.value = 'not-ready'
         return
       }
 
-      const [consumerResult, modelResult, routeResult, trendResult, latencyResult] = await Promise.all([
+      const [consumerResult, modelResult, routeResult, trendResult, latencyResult] =
+        await Promise.allSettled([
         queryGrafanaDatasource({
-          dataSourceUid: datasourceUid.value,
+          dataSourceUid: nextDatasourceUid,
           from: filters.timeRange.from,
           to: filters.timeRange.to,
           queries: [
@@ -81,7 +138,7 @@ export function useAiStatisticsDashboard() {
           ],
         }),
         queryGrafanaDatasource({
-          dataSourceUid: datasourceUid.value,
+          dataSourceUid: nextDatasourceUid,
           from: filters.timeRange.from,
           to: filters.timeRange.to,
           queries: [
@@ -95,7 +152,7 @@ export function useAiStatisticsDashboard() {
           ],
         }),
         queryGrafanaDatasource({
-          dataSourceUid: datasourceUid.value,
+          dataSourceUid: nextDatasourceUid,
           from: filters.timeRange.from,
           to: filters.timeRange.to,
           queries: [
@@ -109,7 +166,7 @@ export function useAiStatisticsDashboard() {
           ],
         }),
         queryGrafanaDatasource({
-          dataSourceUid: datasourceUid.value,
+          dataSourceUid: nextDatasourceUid,
           from: filters.timeRange.from,
           to: filters.timeRange.to,
           queries: [
@@ -122,7 +179,7 @@ export function useAiStatisticsDashboard() {
           ],
         }),
         queryGrafanaDatasource({
-          dataSourceUid: datasourceUid.value,
+          dataSourceUid: nextDatasourceUid,
           from: filters.timeRange.from,
           to: filters.timeRange.to,
           queries: [
@@ -137,32 +194,92 @@ export function useAiStatisticsDashboard() {
         }),
       ])
 
-      if (requestId !== activeRequest) {
+      if (!isActiveRequest(requestId)) {
         return
       }
 
-      consumerRanking.value = normalizeTableRows(consumerResult, 'ai_consumer')
-      modelRanking.value = normalizeTableRows(modelResult, 'ai_model')
-      routeRanking.value = normalizeTableRows(routeResult, 'ai_route')
-      trendSeries.value = normalizeTrendSeries(trendResult)
+      const nextConsumerRanking = getResultRows(consumerResult, 'ai_consumer')
+      const nextModelRanking = getResultRows(modelResult, 'ai_model')
+      const nextRouteRanking = getResultRows(routeResult, 'ai_route')
+      const nextTrendSeries = getTrendRows(trendResult)
+      const hasLatencyData =
+        latencyResult.status === 'fulfilled' && hasFrameValues(latencyResult.value)
+      const averageFirstToken = hasLatencyData ? normalizeFirstValue(latencyResult.value) : 0
 
-      const averageFirstToken = normalizeFirstValue(latencyResult)
+      consumerRanking.value = nextConsumerRanking
+      modelRanking.value = nextModelRanking
+      routeRanking.value = nextRouteRanking
+      trendSeries.value = nextTrendSeries
 
-      options.consumers = consumerRanking.value.map((item) => item.dimension)
-      options.models = modelRanking.value.map((item) => item.dimension)
-      options.routes = routeRanking.value.map((item) => item.dimension)
-      insights.value = buildInsights({
-        consumerRanking: consumerRanking.value,
-        modelRanking: modelRanking.value,
+      if (shouldRefreshOptions() || !options.consumers.length) {
+        options.consumers = nextConsumerRanking.map((item) => item.dimension)
+      }
+
+      if (shouldRefreshOptions() || !options.models.length) {
+        options.models = nextModelRanking.map((item) => item.dimension)
+      }
+
+      if (shouldRefreshOptions() || !options.routes.length) {
+        options.routes = nextRouteRanking.map((item) => item.dimension)
+      }
+
+      const nextInsights = buildInsights({
+        consumerRanking: nextConsumerRanking,
+        modelRanking: nextModelRanking,
         averageFirstToken,
       })
-      lastUpdatedAt.value = new Date().toISOString()
-      state.value = consumerRanking.value.length || modelRanking.value.length ? 'ready' : 'empty'
+
+      if (!hasLatencyData && nextInsights.length) {
+        nextInsights.pop()
+      }
+
+      insights.value = nextInsights
+
+      const hasAnyData = Boolean(
+        nextConsumerRanking.length ||
+          nextModelRanking.length ||
+          nextRouteRanking.length ||
+          nextTrendSeries.length ||
+          hasLatencyData
+      )
+      const hasAnyFailure = [
+        consumerResult,
+        modelResult,
+        routeResult,
+        trendResult,
+        latencyResult,
+      ].some((result) => result.status === 'rejected')
+
+      if (hasAnyData) {
+        lastUpdatedAt.value = new Date().toISOString()
+        state.value = 'ready'
+        return
+      }
+
+      if (hasAnyFailure) {
+        errorMessage.value = getFirstErrorMessage([
+          consumerResult,
+          modelResult,
+          routeResult,
+          trendResult,
+          latencyResult,
+        ])
+        state.value = 'error'
+        return
+      }
+
+      state.value = 'empty'
     } catch (error) {
+      if (!isActiveRequest(requestId)) {
+        return
+      }
+
       errorMessage.value = error?.msg || error?.message || '加载统计数据失败'
       state.value = 'error'
     } finally {
-      loading.value = false
+      if (isActiveRequest(requestId)) {
+        loading.value = false
+      }
     }
   }
 
