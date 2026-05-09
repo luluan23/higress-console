@@ -1,0 +1,146 @@
+{
+  "id": 60,
+  "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 36
+  },
+  "type": "table",
+  "title": "Model Usage",
+  "transformations": [
+    {
+      "id": "joinByField",
+      "options": {
+        "byField": "ai_model",
+        "mode": "inner"
+      }
+    },
+    {
+      "id": "filterFieldsByName",
+      "options": {
+        "byVariable": false,
+        "include": {
+          "names": [
+            "ai_model",
+            "Value #A",
+            "Value #B",
+            "Value #C"
+          ]
+        }
+      }
+    },
+    {
+      "id": "organize",
+      "options": {
+        "excludeByName": {},
+        "includeByName": {},
+        "indexByName": {
+          "Time": 0,
+          "Value": 2,
+          "ai_model": 1
+        },
+        "renameByName": {
+          "Time": "",
+          "Value": "Input Token Usage",
+          "Value #A": "Input Token",
+          "Value #B": "Output Token",
+          "Value #C": "Total Token",
+          "ai_model": "Model"
+        }
+      }
+    }
+  ],
+  "datasource": {
+    "type": "prometheus",
+    "uid": "TGmXMV0Dz"
+  },
+  "pluginVersion": "9.3.6",
+  "fieldConfig": {
+    "defaults": {
+      "custom": {
+        "align": "auto",
+        "displayMode": "auto",
+        "inspect": false
+      },
+      "mappings": [],
+      "thresholds": {
+        "mode": "absolute",
+        "steps": [
+          {
+            "color": "green",
+            "value": null
+          },
+          {
+            "color": "red",
+            "value": 80
+          }
+        ]
+      },
+      "color": {
+        "mode": "thresholds"
+      }
+    },
+    "overrides": []
+  },
+  "options": {
+    "showHeader": true,
+    "footer": {
+      "show": false,
+      "reducer": [
+        "sum"
+      ],
+      "fields": "",
+      "countRows": false
+    },
+    "cellHeight": "sm",
+    "sortBy": []
+  },
+  "targets": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "TGmXMV0Dz"
+      },
+      "editorMode": "code",
+      "exemplar": false,
+      "expr": "sum by(ai_model) (increase(route_upstream_model_consumer_metric_input_token{}[$__range]))",
+      "format": "table",
+      "instant": true,
+      "interval": "",
+      "legendFormat": "input_token",
+      "range": false,
+      "refId": "A"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "TGmXMV0Dz"
+      },
+      "editorMode": "code",
+      "exemplar": false,
+      "expr": "sum by(ai_model) (increase(route_upstream_model_consumer_metric_output_token{}[$__range]))",
+      "format": "table",
+      "hide": false,
+      "instant": true,
+      "legendFormat": "output_token",
+      "range": false,
+      "refId": "B"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "TGmXMV0Dz"
+      },
+      "editorMode": "code",
+      "exemplar": false,
+      "expr": "sum by(ai_model) (increase(route_upstream_model_consumer_metric_input_token{}[$__range])) + sum by(ai_model) (increase(route_upstream_model_consumer_metric_output_token{}[$__range]))",
+      "format": "table",
+      "hide": false,
+      "instant": true,
+      "legendFormat": "total_token",
+      "range": false,
+      "refId": "C"
+    }
+  ]
+}

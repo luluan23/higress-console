@@ -70,6 +70,18 @@ export default defineConfig({
         changeOrigin: true,  //开启代理，在本地创建一个虚拟服务器
         ws: true
       },
+      '/dashboard': {
+        target: "http://localhost:18001/",
+        secure: false,
+        changeOrigin: true,
+        ws: true,
+      },
+      '/grafana': {
+        target: "http://localhost:18001/",
+        secure: false,
+        changeOrigin: true,
+        ws: true,
+      },
       // 代理至ommsweb网关
       // '^/api/.*': {
       //   target: 'http://localhost:8000',
